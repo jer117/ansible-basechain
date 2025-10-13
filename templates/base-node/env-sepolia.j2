@@ -1,0 +1,44 @@
+# Base Sepolia Testnet Configuration
+
+# Network Settings
+RETH_CHAIN=base-sepolia
+OP_NODE_NETWORK=base-sepolia
+
+# JWT Secret for OP Node communication
+OP_NODE_L2_ENGINE_AUTH_RAW={{ base_node_jwt_secret | default('0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef') }}
+OP_NODE_L2_ENGINE_AUTH=/tmp/jwt-secret.txt
+
+# Execution Client RPC Configuration
+OP_NODE_L2_ENGINE_RPC={{ base_node_l2_engine_rpc | default('http://base-node-execution:8545') }}
+
+# L1 Configuration (REQUIRED - Replace with your L1 endpoints)
+OP_NODE_L1_ETH_RPC={{ base_node_l1_eth_rpc }}
+OP_NODE_L1_BEACON={{ base_node_l1_beacon }}
+OP_NODE_L1_RPC_KIND={{ base_node_l1_rpc_kind | default('debug_geth') }}
+
+# Sequencer Configuration
+OP_NODE_SEQUENCER_HTTP={{ base_node_sequencer_http | default('https://sepolia-sequencer.base.org') }}
+OP_GETH_SEQUENCER_HTTP={{ base_node_sequencer_http | default('https://sepolia-sequencer.base.org') }}
+
+# Performance Settings
+{% if base_node_client == 'geth' %}
+GETH_CACHE={{ base_node_geth_cache | default('10240') }}
+GETH_CACHE_DATABASE={{ base_node_geth_cache_database | default('10') }}
+GETH_CACHE_GC={{ base_node_geth_cache_gc | default('6') }}
+GETH_CACHE_SNAPSHOT={{ base_node_geth_cache_snapshot | default('12') }}
+GETH_CACHE_TRIE={{ base_node_geth_cache_trie | default('22') }}
+{% endif %}
+
+# Optional Features
+{% if base_node_trusted_rpc | default(false) %}
+OP_NODE_TRUSTED_RPC=true
+{% endif %}
+
+{% if base_node_snap_sync | default(false) %}
+OP_NODE_SNAP_SYNC=true
+{% endif %}
+
+# Monitoring (optional)
+{% if base_node_ethstats_enabled | default(false) %}
+ETHSTATS={{ base_node_ethstats_url }}
+{% endif %}

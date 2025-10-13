@@ -1,0 +1,41 @@
+---
+# Docker Images
+
+# ansible-basechain vars
+basechain_docker_container_name: "basechain"
+prometheus_name: "prometheus"
+basechain_binary_name: "basechain"
+role: "basechain"
+
+# Ethereum Ports
+ethereum_p2p_port: 26656
+ethereum_rpc_port: 26657
+ethereum_prometheus_port: 9090
+
+# Telemetry
+telemetry_enabled: "false"
+
+# set docker container memory limit to 80% of available machine memory
+ethereum_docker_memory_limit: "{{ (ansible_memory_mb.real.total * 0.8) | round | int }}M"
+
+validator_docker_ports:
+  - "{{ ethereum_p2p_port }}:{{ ethereum_p2p_port }}"
+  - 127.0.0.1:{{ ethereum_prometheus_port }}:{{ ethereum_prometheus_port }}
+
+# Monitoring Vars
+prometheus_name: "prometheus"
+
+grafana_agent_http_port: 12345
+grafana_agent_grpc_port: 9095
+
+node_exporter_name: "node-exporter"
+
+# Cadvisor Vars
+cadvisor_enabled: true
+# renovate: datasource=docker depName=gcr.io/cadvisor/cadvisor versioning=docker
+cadvisor_image: gcr.io/cadvisor/cadvisor:v0.49.1
+# the default CADVISOR_HEALTHCHECK_URL is "http://localhost:8080/healthz"
+# so match it
+cadvisor_internal_port: 8080
+cadvisor_port: 24165
+

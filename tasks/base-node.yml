@@ -1,0 +1,184 @@
+---
+- name: Create Base node directory structure
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "root"
+    group: "root"
+    mode: "0755"
+  with_items:
+    - "{{ base_node_host_data_mount }}"
+    - "{{ base_node_host_config_mount }}"
+
+- name: Create environment file for Base node
+  template:
+    src: "base-node/env-{{ base_node_network }}.j2"
+    dest: "{{ base_node_host_config_mount }}/{{ base_node_network_env }}"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+  register: env_file_created
+
+- name: Copy docker-compose.yml for Base node
+  template:
+    src: "base-node/docker-compose.yml.j2"
+    dest: "{{ base_node_host_config_mount }}/docker-compose.yml"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+  register: compose_file_created
+
+- name: Copy versions.env for Base node
+  copy:
+    src: "versions.env"
+    dest: "{{ base_node_host_config_mount }}/versions.env"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+  register: versions_file_created
+
+- name: Copy Dockerfiles for Base node
+  copy:
+    src: "{{ item }}/"
+    dest: "{{ base_node_host_config_mount }}/{{ item }}/"
+    owner: "root"
+    group: "root"
+    mode: "0755"
+  with_items:
+    - "geth"
+    - "reth"
+    - "nethermind"
+  register: dockerfiles_copied
+
+- name: Copy entrypoint scripts
+  copy:
+    src: "{{ item }}"
+    dest: "{{ base_node_host_config_mount }}/{{ item }}"
+    owner: "root"
+    group: "root"
+    mode: "0755"
+  with_items:
+    - "op-node-entrypoint"
+    - "supervisord.conf"
+  register: scripts_copied
+
+- name: Copy client-specific entrypoint scripts
+  copy:
+    src: "{{ item }}/{{ item }}-entrypoint"
+    dest: "{{ base_node_host_config_mount }}/{{ item }}-entrypoint"
+    owner: "root"
+    group: "root"
+    mode: "0755"
+  with_items:
+    - "geth"
+    - "reth"
+    - "nethermind"
+  register: client_scripts_copied
+
+- name: Detect if any Base node files have changed
+  set_fact:
+    base_node_files_changed: "{{ env_file_created.changed | bool or compose_file_created.changed | bool or versions_file_created.changed | bool or dockerfiles_copied.changed | bool or scripts_copied.changed | bool or client_scripts_copied.changed | bool }}"
+
+- name: Stop existing Base node containers
+  docker_container:
+    name: "{{ item }}"
+    state: stopped
+    force_kill: true
+  with_items:
+    - "{{ base_node_execution_container_name }}"
+    - "{{ base_node_op_node_container_name }}"
+  ignore_errors: true
+  when: base_node_files_changed | bool
+
+- name: Remove existing Base node containers
+  docker_container:
+    name: "{{ item }}"
+    state: absent
+  with_items:
+    - "{{ base_node_execution_container_name }}"
+    - "{{ base_node_op_node_container_name }}"
+  ignore_errors: true
+  when: base_node_files_changed | bool
+
+- name: Build Base node Docker images
+  docker_image:
+    name: "{{ base_node_image_name }}"
+    source: build
+    build:
+      path: "{{ base_node_host_config_mount }}"
+      dockerfile: "{{ base_node_client }}/Dockerfile"
+    state: present
+  register: base_node_image_built
+  when: base_node_files_changed | bool
+
+# Set docker ports
+- name: Set execution docker ports
+  ansible.builtin.set_fact:
+    base_node_execution_ports: "{{ base_node_execution_ports }}"
+
+- name: Start Base node execution container
+  docker_container:
+    name: "{{ base_node_execution_container_name }}"
+    image: "{{ base_node_image_name }}"
+    state: started
+    restart_policy: unless-stopped
+    memory: "{{ base_node_docker_memory_limit }}"
+    memory_swap: "{{ base_node_docker_memory_limit }}"
+    networks:
+      - name: "basechain-network-net"
+    ports: "{{ base_node_execution_ports }}"
+    volumes:
+      - "{{ base_node_host_data_mount }}:/data"
+    env:
+      NODE_TYPE: "{{ base_node_type }}"
+    env_file: "{{ base_node_host_config_mount }}/{{ base_node_network_env }}"
+    command: ["bash", "./execution-entrypoint"]
+    detach: true
+  register: execution_container_started
+
+# Set docker ports
+- name: Set execution docker ports
+  ansible.builtin.set_fact:
+    base_node_op_node_ports: "{{ base_node_op_node_ports }}"
+
+- name: Start Base node OP node container
+  docker_container:
+    name: "{{ base_node_op_node_container_name }}"
+    image: "{{ base_node_image_name }}"
+    state: started
+    restart_policy: unless-stopped
+    memory: "{{ base_node_docker_memory_limit }}"
+    memory_swap: "{{ base_node_docker_memory_limit }}"
+    networks:
+      - name: "basechain-network-net"
+    ports: "{{ base_node_op_node_ports }}"
+    env_file: "{{ base_node_host_config_mount }}/{{ base_node_network_env }}"
+    command: ["bash", "./op-node-entrypoint"]
+    detach: true
+  register: op_node_container_started
+
+- name: Wait for Base node services to be ready
+  wait_for:
+    port: "{{ item }}"
+    host: "localhost"
+    delay: 10
+    timeout: 300
+  with_items:
+    - "{{ base_node_execution_rpc_port }}"
+    - "{{ base_node_op_node_rpc_port }}"
+  when: execution_container_started.changed | bool or op_node_container_started.changed | bool
+
+- name: Display Base node status
+  debug:
+    msg: |
+      Base node deployment completed successfully!
+      
+      Execution node RPC: http://localhost:{{ base_node_execution_rpc_port }}
+      OP node RPC: http://localhost:{{ base_node_op_node_rpc_port }}
+      
+      Network: {{ base_node_network }}
+      Client: {{ base_node_client }}
+      
+      To check logs:
+      - Execution: docker logs {{ base_node_execution_container_name }}
+      - OP Node: docker logs {{ base_node_op_node_container_name }}

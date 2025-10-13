@@ -1,0 +1,14 @@
+host_vars/*
+secrets.yml
+ansible.cfg
+*.cfg
+.DS_Store
+package.json
+package-lock.json
+node_modules
+inventory
+/.idea/
+/geth-data/
+/reth-data/
+/nethermind-data/
+/dependency_updater/dependency_updater

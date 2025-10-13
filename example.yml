@@ -1,0 +1,38 @@
+# Example host_vars file for Base node configuration
+# Copy this file to host_vars/{{ inventory_hostname }}.yml and configure your L1 endpoints
+telegram_bot_token: "telegram_bot_token"
+telegram_chat_id: "telegram_chat_id"
+utc_file: UTC-blah
+utc_password: "password"
+sudo_password: "password"
+IP: IP_ADDRESS
+GRAFANA_ADMIN_PASSWORD: "password"
+
+# Base Node Configuration
+base_node_network: "mainnet"  # or "sepolia" for testnet
+base_node_client: "geth"  # geth, reth, or nethermind
+base_node_type: "vanilla"  # vanilla or archive
+
+# REQUIRED: L1 Configuration - Replace with your actual L1 endpoints
+base_node_l1_eth_rpc: "https://your-l1-eth-rpc-endpoint"
+base_node_l1_beacon: "https://your-l1-beacon-endpoint"
+# base_node_l1_beacon_archiver: "https://your-l1-beacon-archiver-endpoint" # Optional - can be left empty
+base_node_l1_rpc_kind: "debug_geth"  # alchemy, quicknode, infura, parity, nethermind, debug_geth, erigon, basic, any, standard
+
+# Optional: Performance tuning for Geth
+base_node_geth_cache: "20480"  # 20GB cache for mainnet
+base_node_geth_cache_database: "20"
+base_node_geth_cache_gc: "12"
+base_node_geth_cache_snapshot: "24"
+base_node_geth_cache_trie: "44"
+
+# Optional: Advanced features
+base_node_trusted_rpc: false
+base_node_snap_sync: false
+base_node_ethstats_enabled: false
+base_node_ethstats_url: ""
+
+# Example for Sepolia testnet:
+# base_node_network: "sepolia"
+# base_node_network_env: ".env.sepolia"
+# base_node_geth_cache: "10240"  # Smaller cache for testnet

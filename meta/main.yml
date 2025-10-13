@@ -1,0 +1,20 @@
+---
+galaxy_info:
+  galaxy_tags: []
+  namespace: jp 
+  role_name: basechain
+  author: JP Node.
+  description: Role to install a basechain node
+  company: JP Node.
+  license: license private
+  min_ansible_version: "2.4"
+
+  platforms:
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+
+dependencies:
+  []
+

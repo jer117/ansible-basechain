@@ -1,0 +1,37 @@
+---
+- hosts: all
+
+  tasks:
+    - name: Load secret variables
+      ansible.builtin.include_vars:
+        file: "host_vars/{{ inventory_hostname }}.yml"
+      tags: [always]
+
+    - name: Include network specific vars
+      ansible.builtin.include_vars: network.yml
+      tags: [always]
+
+    - name: Include main vars
+      ansible.builtin.include_vars: main.yml
+      tags: [always]
+
+    - name: Include default vars
+      ansible.builtin.include_vars: defaults/main.yml
+      tags: [always]
+
+    - name: Create Docker network
+      docker_network:
+        name: basechain-network-net
+        state: present
+
+    - name: Include task base node
+      include_tasks: tasks/base-node.yml
+      tags: base-node
+
+    - name: Include task monitoring
+      include_tasks: tasks/monitoring.yml
+      tags: monitoring
+    
+    # - name: Install watchdog
+    #   ansible.builtin.import_tasks: tasks/watchdog.yml
+    #   tags: watchdog

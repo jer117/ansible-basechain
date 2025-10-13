@@ -1,0 +1,28 @@
+---
+
+
+# Base Node Networks
+base_node_networks:
+  mainnet:
+    network_name: "base-mainnet"
+    chain_id: "base"
+    sequencer_http: "https://mainnet-sequencer.base.org"
+    network_env_file: ".env.mainnet"
+    rpc_kind: "debug_geth"
+    geth_cache: "20480"
+    geth_cache_database: "20"
+    geth_cache_gc: "12"
+    geth_cache_snapshot: "24"
+    geth_cache_trie: "44"
+    
+  sepolia:
+    network_name: "base-sepolia"
+    chain_id: "base-sepolia"
+    sequencer_http: "https://sepolia-sequencer.base.org"
+    network_env_file: ".env.sepolia"
+    rpc_kind: "debug_geth"
+    geth_cache: "10240"
+    geth_cache_database: "10"
+    geth_cache_gc: "6"
+    geth_cache_snapshot: "12"
+    geth_cache_trie: "22"
