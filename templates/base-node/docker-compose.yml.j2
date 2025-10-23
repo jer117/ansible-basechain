@@ -1,0 +1,35 @@
+services:
+  execution:
+    build:
+      context: .
+      dockerfile: {{ base_node_client }}/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "{{ base_node_execution_rpc_port }}:8545" # RPC
+      - "{{ base_node_execution_ws_port }}:8546" # websocket
+      - "{{ base_node_execution_metrics_port }}:6060" # metrics
+      - "{{ base_node_execution_p2p_port }}:30303" # P2P TCP
+      - "{{ base_node_execution_p2p_port }}:30303/udp" # P2P UDP
+    command: ["bash", "./execution-entrypoint"]
+    volumes:
+      - {{ base_node_host_data_mount }}:/data
+    environment:
+      - NODE_TYPE={{ base_node_type | default('vanilla') }}
+    env_file:
+      - {{ base_node_network_env }}
+  node:
+    build:
+      context: .
+      dockerfile: {{ base_node_client }}/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - execution
+    ports:
+      - "{{ base_node_op_node_rpc_port }}:8545" # RPC
+      - "{{ base_node_op_node_p2p_port }}:9222" # P2P TCP
+      - "{{ base_node_op_node_p2p_port }}:9222/udp" # P2P UDP
+      - "{{ base_node_op_node_metrics_port }}:7300" # metrics
+      - "{{ base_node_op_node_pprof_port }}:6060" # pprof
+    command: ["bash", "./op-node-entrypoint"]
+    env_file:
+      - {{ base_node_network_env }}

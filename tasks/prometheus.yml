@@ -1,0 +1,26 @@
+---
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['{{ prometheus_name }}:9090']
+
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+
+  # River metrics
+  - job_name: "{{ role }}-op-node-exporter"
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["river:{{ ethereum_prometheus_port }}"]
+
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:{{ cadvisor_internal_port }}']
+
+  - job_name: 'grafana_agent'
+    static_configs:
+      - targets: ['grafana_agent:{{ grafana_agent_http_port }}']  # Adjust if necessary

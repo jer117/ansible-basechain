@@ -1,0 +1,19 @@
+---
+metrics:
+  wal_directory: /tmp/grafana-agent-wal
+  global:
+    scrape_interval: 15s
+  configs:
+    - name: default
+      scrape_configs:
+        - job_name: 'node_exporter'
+          static_configs:
+            - targets: ['node_exporter:9100']
+        - job_name: 'cadvisor'
+          static_configs:
+            - targets: ['cadvisor:8080']
+        - job_name: 'prometheus'
+          metrics_path: /metrics
+          static_configs:
+            - targets: ['{{ base_node_execution_container_name }}:{{ ethereum_prometheus_port }}']
+            - targets: ['{{ base_node_op_node_container_name }}:{{ base_node_op_node_pprof_port }}']

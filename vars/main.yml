@@ -1,0 +1,73 @@
+# Host mounts
+basechain_host_config_mount: "/root/.basechain/config"
+basechain_host_data_mount: "/data/basechain"
+
+# Base Node Configuration
+base_node_host_config_mount: "/root/.base-node/config"
+base_node_host_data_mount: "/data/base-node"
+base_node_network: "mainnet"  # mainnet or sepolia
+base_node_client: "geth"  # geth, reth, or nethermind
+base_node_type: "vanilla"  # vanilla or archive
+base_node_network_env: ".env.mainnet"  # .env.mainnet or .env.sepolia
+
+# Base Node Container Names
+base_node_execution_container_name: "base-node-execution"
+base_node_op_node_container_name: "base-node-op-node"
+base_node_image_name: "base-node:latest"
+
+# Base Node Ports
+base_node_execution_rpc_port: 8545
+base_node_execution_ws_port: 8546
+base_node_execution_metrics_port: 7301
+base_node_execution_p2p_port: 30303
+base_node_op_node_rpc_port: 7545
+base_node_op_node_p2p_port: 9222
+base_node_op_node_metrics_port: 7300
+base_node_op_node_pprof_port: 6060
+
+# Execution Layer docker ports
+base_node_execution_ports: 
+  - "{{ base_node_execution_p2p_port }}:{{ base_node_execution_p2p_port }}"
+  - "{{ base_node_execution_rpc_port }}:{{ base_node_execution_rpc_port }}"
+  - "{{ base_node_execution_metrics_port }}:{{ base_node_execution_metrics_port }}"
+
+# OP Node docker ports
+base_node_op_node_ports: 
+  - "{{ base_node_op_node_p2p_port }}:{{ base_node_op_node_p2p_port }}"
+  - "{{ base_node_op_node_rpc_port }}:{{ base_node_op_node_rpc_port }}"
+  - "{{ base_node_op_node_metrics_port }}:{{ base_node_op_node_metrics_port }}"
+  - "{{ base_node_op_node_pprof_port }}:{{ base_node_op_node_pprof_port }}"
+
+# Base Node Memory Limits
+base_node_docker_memory_limit: "{{ (ansible_memory_mb.real.total * 0.8) | round | int }}M"
+
+# Base Node L1 Configuration (REQUIRED - Set these in host_vars)
+# These are intentionally empty - must be set in host_vars/{{ inventory_hostname }}.yml
+# base_node_l1_eth_rpc: ""  # Set in host_vars/{{ inventory_hostname }}.yml
+# base_node_l1_beacon: ""   # Set in host_vars/{{ inventory_hostname }}.yml
+# base_node_l1_beacon_archiver: ""  # Set in host_vars/{{ inventory_hostname }}.yml
+base_node_l1_rpc_kind: "debug_geth"  # alchemy, quicknode, infura, parity, nethermind, debug_geth, erigon, basic, any, standard
+
+# Base Node Performance Settings
+base_node_geth_cache: "20480"
+base_node_geth_cache_database: "20"
+base_node_geth_cache_gc: "12"
+base_node_geth_cache_snapshot: "24"
+base_node_geth_cache_trie: "44"
+
+# Base Node Optional Features
+base_node_trusted_rpc: false
+base_node_snap_sync: false
+base_node_ethstats_enabled: false
+base_node_ethstats_url: ""
+
+# JWT Secret for OP Node communication (can be overridden in host_vars)
+base_node_jwt_secret: "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+
+# Execution Client RPC Configuration
+base_node_l2_engine_rpc: "http://base-node-execution:8545"
+
+watchdog_storage_warning: 90
+watchdog_protocol_mem_limit: 99
+watchdog_frequency: 10
+
